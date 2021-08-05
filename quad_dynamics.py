@@ -42,7 +42,7 @@ class OptimalControlProblem:
 
 
 class PlanarDroneOCP:
-    def __init__(self, x0 = [1, 1, 0, 0, 0, 0], xT = [1, 2, 0, 0, 0, 0]):
+    def __init__(self, x0 = [1, 1, 0, 0, 0, 0], xT = [5, 2, 0, 0, 0, 0]):
         self.N = 50
         self.dt = 1/self.N
         self.x0 = x0
@@ -66,7 +66,7 @@ class PlanarDroneOCP:
         ode_tilde = csd.vertcat(T*self.dynamics.ode, 0)
         
         dae = {'x': x_tilde, 'p': self.dynamics.u, 'ode': ode_tilde, 'quad': self.L}
-        opts = {'tf': self.dt, 'number_of_finite_elements': 10}
+        opts = {'tf': self.dt, 'number_of_finite_elements': 4}
         self.integrator = csd.integrator("integrator", "rk", dae, opts)
 
     def define_ocp(self):
@@ -199,4 +199,5 @@ if __name__ == "__main__":
     plt.grid()
     plt.show()
 
+    print(x_opt[0,::5])
     plot_multiple_states(x_opt[0,::5], x_opt[1,::5], x_opt[2,::5], ocp.dynamics.L)

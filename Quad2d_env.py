@@ -15,15 +15,15 @@ class Drone(gym.Env):
         'video.frames_per_second' : 10
     }
 
-    def __init__(self):
+    def __init__(self, goal_state = np.array([5., 5., 0., 0., 0., 0.])):
         self.gravity = 9.81 #: [m/s2] acceleration
         self.mass = 1 #: [kg] mass
         self.Ixx = 0.1
         self.arm_length = 0.2 # [m]
         self.arm_width = 0.02 # [m]
-        self.height = 0.02 # [m]
+        # self.height = 0.02 # [m]
 
-        self.goal_state = np.array([9, 9, 0, 0, 0, 0])
+        self.goal_state = goal_state
         
         # max and min force for each motor
         self.maxF = 3/2 * self.mass * self.gravity
@@ -31,7 +31,7 @@ class Drone(gym.Env):
         self.maxAngle = np.pi
         self.dt = Drone.T
         self.no_intg_steps = 0
-        self.max_intg_steps = 100
+        self.max_intg_steps = 250
 
         high = np.array([
             10.0,
@@ -110,34 +110,29 @@ class Drone(gym.Env):
         self.state = Intg['xf'].full()[:,0]        
         self.no_intg_steps += 1
         
-        done = bool(
-            self.state[0] >= 10. or
-            self.state[0] <= 0. or
-            self.state[1] >= 10. or
-            self.state[1] <= 0. or 
-            self.no_intg_steps >= self.max_intg_steps)           
+        out_of_bounds = bool(
+                self.state[0] >= 10. or
+                self.state[0] <= 0. or
+                self.state[1] >= 10. or
+                self.state[1] <= 0.)           
         
-        if done:
-            reward = -5000
+        if out_of_bounds:
+            reward = -1000
         else:
-            if np.linalg.norm(np.array(self.state[0:2]) - self.goal_state[0:2])**2 < 1e-1:
-                extra_bonus = 500
-            else:
-                extra_bonus = 0
-            dist_to_goal_reward = -1e-1*np.linalg.norm(np.array(self.state[0:2]) - self.goal_state[0:2])**2
-            being_alive_reward = 50
-            reward = dist_to_goal_reward + extra_bonus + being_alive_reward
+            dist_to_goal_reward = -np.linalg.norm(np.array(self.state) - self.goal_state)**2
+            # dist_to_goal_reward = 0
+            being_alive_reward = 5
+            reward = dist_to_goal_reward + being_alive_reward
         
+        done = out_of_bounds or bool(self.no_intg_steps >= self.max_intg_steps)
         return self.state, reward, done, {} 
-        # return np.array(self.state), reward, done, {}
-    
+
+
     def reset(self):
-        self.state = np.array([self.np_random.uniform(low=0, high=10),
-                               self.np_random.uniform(low=0, high=10),
-                               self.np_random.uniform(low=-np.pi/6, high=np.pi/6),
-                               self.np_random.uniform(low=-1, high=1),
-                               self.np_random.uniform(low=-1, high=1),
-                               self.np_random.uniform(low=-1, high=1)])
+        self.state = np.array([5,
+                               5,
+                            #    self.np_random.uniform(low=-c.pi/4, high=c.pi/4), 
+                               0., 0., 0., 0.])
         self.no_intg_steps = 0
         return self.state
 
@@ -145,7 +140,7 @@ class Drone(gym.Env):
         self.state = state
 
     @staticmethod
-    def transform(x0, angle, xb):
+    def rot_z(x0, angle, xb):
         T = np.array([ [np.cos(angle), -np.sin(angle)],
                        [np.sin(angle),  np.cos(angle)] ])
         return x0 + T.dot(xb)
@@ -157,19 +152,19 @@ class Drone(gym.Env):
 
         x, z, phi = self.state[0:3].tolist()
 
-        t1_xy = Drone.transform(self.state[0:2],
-                                     self.state[2],
-                                     np.array([self.arm_length, 0]))
-        t2_xy = Drone.transform(self.state[0:2],
-                                     self.state[2],
-                                     np.array([-self.arm_length, 0]))
+        t1_xy = self.rot_z(self.state[0:2],
+                            self.state[2],
+                            np.array([self.arm_length, 0]))
+        t2_xy = self.rot_z(self.state[0:2],
+                            self.state[2],
+                            np.array([-self.arm_length, 0]))
 
         to_xy = self.goal_state[0:2]
         
         if self.viewer is None:
             self.viewer = rendering.Viewer(screen_width, screen_height)
-            self.viewer.set_bounds(Drone.LIMITS[0], Drone.LIMITS[1],
-                                   Drone.LIMITS[0], Drone.LIMITS[1])
+            self.viewer.set_bounds(self.LIMITS[0], self.LIMITS[1],
+                                   self.LIMITS[0], self.LIMITS[1])
             
             l,r,t,b = -self.arm_length, self.arm_length, self.arm_width, -self.arm_width
             self.frame_trans = rendering.Transform(rotation=phi, translation=(x,z))
