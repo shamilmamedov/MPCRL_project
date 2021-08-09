@@ -1,5 +1,6 @@
 import os
 import gym
+import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -14,34 +15,9 @@ from stable_baselines3.common.results_plotter import load_results, ts2xy, plot_r
 from stable_baselines3.common.noise import NormalActionNoise
 from stable_baselines3.common.callbacks import BaseCallback
 
+train_new_model = False
+time_steps = 5e+5
 
-class PlottingCallback(BaseCallback):
-    """
-    Callback for plotting the perofrmance in realtime
-    """
-    def __init__(self, log_dir, verbose=1):
-        super(PlottingCallback, self).__init__(verbose)
-        self.log_dir = log_dir
-        self._plot = None
-        
-
-    def _on_step(self) -> bool:
-        # get the monitor's data
-        x, y = ts2xy(load_results(self.log_dir), 'timesteps')
-        if self._plot is None:
-            plt.ion()
-            fig = plt.figure(figsize=(10,10))
-            ax = fig.add_subplot(111)
-            line, = ax.plot(x,y)
-            self._plot = (line, ax, fig)
-            plt.show()
-        else:
-            self._plot[0].set_data(x,y)
-            self._plot[-2].relim()
-            # self._plot[-2].set_xlim([-self.locals["total_timesteps"],
-            #                          self.locals["total_timesteps"]])
-            self._plot[-2].autoscale_view(True, True, True)
-            self._plot[-1].canvas.draw()
 # define enivronment
 log_dir = "logs/"
 os.makedirs(log_dir, exist_ok=True)
@@ -49,24 +25,39 @@ os.makedirs(log_dir, exist_ok=True)
 env = Drone()
 env = Monitor(env, log_dir)
 env = DummyVecEnv([lambda: env])
-
+env.reset()
 
 # Soft-Actor Critic
-sac_model = SAC("MlpPolicy", env, verbose=1, learning_rate=1e-3)
+if train_new_model:
+    n_actions = env.action_space.shape[-1]
+    action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.2 * np.ones(n_actions))
 
-# plotting_callback = PlottingCallback(log_dir)
-time_steps = 5e+3
-sac_model.learn(total_timesteps=time_steps, log_interval=10)     
+    policy_kwargs = dict(net_arch = dict(pi = [256, 256, 256], qf = [256, 256, 256]))
 
-plot_results([log_dir], time_steps, results_plotter.X_TIMESTEPS, "SAC PlanarDrone")
-plt.show()
+    sac_model = SAC("MlpPolicy", env, verbose=1, learning_rate=1e-3, 
+                    tensorboard_log="logs/sac_planardrone_tensorboard/",
+                    action_noise=action_noise, policy_kwargs=policy_kwargs)
 
-x, y = ts2xy(load_results(log_dir), 'timesteps')
-fig = plt.figure()
-plt.plot(x, y)
-plt.show()
+    sac_model.learn(total_timesteps=time_steps, log_interval=10, reset_num_timesteps=True)     
+else:
+    sac_model = SAC.load("sac_drone", env=env, tensorboard_log="logs/sac_planardrone_tensorboard/")
+    sac_model.load_replay_buffer("sac_drone_replay_buffer")
+    # Pass reset_num_timesteps=False to continue the training curve in tensorboard
+    sac_model.learn(total_timesteps=time_steps, log_interval=10, reset_num_timesteps=False)     
+
+
+
+# plot_results([log_dir], time_steps, results_plotter.X_TIMESTEPS, "SAC PlanarDrone")
+# plt.show()
+
+# x, y = ts2xy(load_results(log_dir), 'timesteps')
+# fig = plt.figure()
+# plt.plot(x, y)
+# plt.show()
 
 sac_model.save("sac_drone")
+sac_model.save_replay_buffer("sac_drone_replay_buffer")
+
 # del model # remove to demonstrate saving and loading
 
 # # TD3

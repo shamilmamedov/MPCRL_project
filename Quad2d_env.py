@@ -8,7 +8,6 @@ import casadi as c
 
 class Drone(gym.Env):
     LIMITS = np.array([0, 10])
-    T = 0.01
     
     metadata = {
         'render.modes': ['human'],
@@ -21,22 +20,24 @@ class Drone(gym.Env):
         self.Ixx = 0.1
         self.arm_length = 0.2 # [m]
         self.arm_width = 0.02 # [m]
-        # self.height = 0.02 # [m]
 
         self.goal_state = goal_state
+
+        self.Q = np.diag([1, 1, 1, 1, 1, 1])
+        self.R = np.diag([0.1, 0.1])
         
         # max and min force for each motor
         self.maxF = 3/2 * self.mass * self.gravity
         self.minF = 0
         self.maxAngle = np.pi
-        self.dt = Drone.T
+        self.dt = 0.01
         self.no_intg_steps = 0
-        self.max_intg_steps = 250
+        self.max_intg_steps = 500
 
         high = np.array([
             10.0,
             10.0,
-            np.finfo(np.float32).max,
+            np.pi,
             np.finfo(np.float32).max,
             np.finfo(np.float32).max,
             np.finfo(np.float32).max,
@@ -45,7 +46,7 @@ class Drone(gym.Env):
         low = np.array([
             0.0,
             0.0,
-            -np.finfo(np.float32).max,
+            -np.pi,
             -np.finfo(np.float32).max,
             -np.finfo(np.float32).max,
             -np.finfo(np.float32).max,
@@ -88,7 +89,7 @@ class Drone(gym.Env):
         
         dae = {'x': x, 'p': u, 'ode': ode}
         
-        opts = {'tf': self.dt, 'number_of_finite_elements': 4}
+        opts = {'tf': self.dt, 'number_of_finite_elements': 3}
         self.integrator = c.integrator("integrator", "rk", dae, opts)
 
 
@@ -119,9 +120,10 @@ class Drone(gym.Env):
         if out_of_bounds:
             reward = -1000
         else:
-            dist_to_goal_reward = -np.linalg.norm(np.array(self.state) - self.goal_state)**2
+            dist_to_goal_reward = - (np.array(self.state) - self.goal_state).T @ self.Q @ \
+                                    (np.array(self.state) - self.goal_state)
             # dist_to_goal_reward = 0
-            being_alive_reward = 5
+            being_alive_reward = 1
             reward = dist_to_goal_reward + being_alive_reward
         
         done = out_of_bounds or bool(self.no_intg_steps >= self.max_intg_steps)
