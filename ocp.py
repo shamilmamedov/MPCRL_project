@@ -1,7 +1,6 @@
 import casadi as csd
 import numpy as np
 from quad_dynamics import PlanarDroneDynamics
-from plot_utils import visualize_trajectory, plot_controls, plot_pose
 
 
 class OptimalControlProblem:
@@ -173,28 +172,3 @@ class PlanarDroneOCP:
         x_opt = np.array([px_opt, py_opt, phi_opt, vx_opt, vy_opt, phidot_opt])
         u_opt = np.array([F1_opt, F2_opt])
         return x_opt, u_opt, T_opt
-
-
-
-
-
-
-if __name__ == "__main__":
-
-    r_obst1 = 0.8
-    r_obst2 = 0.5
-    p_obst1 = csd.vertcat(5, 4)
-    p_obst2 = csd.vertcat(8, 8)
-
-    obstacles = ([p_obst1, r_obst1], [p_obst2, r_obst2])
-
-
-    ocp = PlanarDroneOCP(stage_cost_type="time", obstacles=obstacles)
-    x_opt, u_opt, T_opt = ocp.solve_ocp()
-
-    print(T_opt)
-    tgrid = [T_opt/ocp.N*k for k in range(ocp.N+1)]
-
-    plot_controls(tgrid, u_opt)
-    plot_pose(tgrid, x_opt[0:3,:])
-    visualize_trajectory(x_opt[0,::5], x_opt[1,::5], x_opt[2,::5], ocp.dynamics.L, obstacles)

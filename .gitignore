@@ -1,2 +1,8 @@
 # Byte-complied /optimized / DLL files
 __pycache__/
+
+# Replay buffer of the Stable Baselines 3, because it is very heavy
+*.pkl
+
+# Jupyter Notebook
+.ipynb_checkpoints
