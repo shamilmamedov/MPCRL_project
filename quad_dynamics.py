@@ -25,4 +25,10 @@ class PlanarDroneDynamics:
         phiddot = 1/self.Izz * (F1 - F2) * self.L
         self.ode = csd.vertcat(vx, vy, phidot, ax, ay, phiddot)
 
+    def create_integrator(self, dt):
+        dae = {'x': self.x, 'p': self.u, 'ode': self.ode}
+        opts = {'tf': dt, 'number_of_finite_elements': 5}
+        self.integrator = csd.integrator("integrator", "rk", dae, opts)
 
+    def simulate(self, x0, u):
+        return self.integrator(x0=x0, p=u)['xf'].full()

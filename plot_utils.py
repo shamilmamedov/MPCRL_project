@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from casadi import cos, sin, pi, sqrt, linspace
 import matplotlib
 
-def visualize_trajectory(x, y, phi, L, obstacles=None, save_fig=False):
+def visualize_trajectory(x, y, phi, L, obstacles=None, save_fig=False, fig_name=None):
     latexify(fig_width=3, fig_height=3)
     marker_size = 5
     fig, ax = plt.subplots()
@@ -32,12 +32,12 @@ def visualize_trajectory(x, y, phi, L, obstacles=None, save_fig=False):
     ax.set_xlabel('X (m)')
     ax.set_ylabel('Y (m)')
     ax.set_aspect(1)
-    plt.show()
+    # plt.show()
 
     if save_fig:
-        fig.savefig('trajectory.svg', format='svg', dpi=1200)
+        fig.savefig(fig_name + '.svg', format='svg', dpi=1200)
 
-def plot_controls(tgrid, u, save_fig=False):
+def plot_controls(tgrid, u, save_fig=False, fig_name=None):
     latexify(fig_width=2, fig_height=1.5)
     fig, ax = plt.subplots()
     ax.step(tgrid[0:-1], u[0,:], where='post', label=r'$F_1$')
@@ -46,10 +46,10 @@ def plot_controls(tgrid, u, save_fig=False):
     ax.set_ylabel(r'$F$ (N)')
     ax.legend()
     ax.grid()
-    plt.show()
+    # plt.show()
 
     if save_fig:
-        fig.savefig('controls.svg', format='svg', dpi=1200)
+        fig.savefig(fig_name + '.svg', format='svg', dpi=1200)
 
 def plot_pose(tgrid, pose, save_fig=False):
     latexify()
