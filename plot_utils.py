@@ -42,11 +42,11 @@ def plot_controls(tgrid, u, save_fig=False, fig_name=None):
     fig, ax = plt.subplots()
     ax.step(tgrid[0:-1], u[0,:], where='post', label=r'$F_1$')
     ax.step(tgrid[0:-1], u[1,:], where='post', label=r'$F_2$')
-    ax.set_xlabel(r'$t$ (sec)')
+    ax.set_xlabel(r'$k$ (iteration)')
     ax.set_ylabel(r'$F$ (N)')
     ax.legend()
     ax.grid()
-    # plt.show()
+    plt.show()
 
     if save_fig:
         fig.savefig(fig_name + '.svg', format='svg', dpi=1200)
