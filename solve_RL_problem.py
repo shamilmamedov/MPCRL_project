@@ -86,22 +86,6 @@ def continue_traininig_TD3_model(env, time_steps=1e+5):
     td3_model.save_replay_buffer("RL_models/td3_drone_replay_buffer")
 
 
-def train_new_PPO_model(env, time_steps=1e+5):
-    # parameters of the model
-    policy_kwargs = dict(net_arch=[128, 128, dict(vf=[256, 256])])
-    lr = 3e-4 
-    
-    model = PPO("MlpPolicy", env, verbose=1, learning_rate=lr, gamma=1,
-                tensorboard_log="logs/ppo3_planardrone_tensorboard/", 
-                policy_kwargs=policy_kwargs)
-
-    # train model
-    model.learn(total_timesteps=time_steps, log_interval=25)
-    
-    # save model
-    model.save("RL_models/ppo_drone")
-
-
 time_steps = 5e+5
 
 # define enivronment

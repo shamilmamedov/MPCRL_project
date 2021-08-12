@@ -17,7 +17,8 @@ class PlanarQuadrotorEnv(gym.Env):
         'video.frames_per_second' : 10
     }
 
-    def __init__(self, goal_state = np.array([9., 9., 0., 0., 0., 0.]), obstacles=None):
+    def __init__(self, goal_state = np.array([9., 9., 0., 0., 0., 0.]), 
+                 obstacles=None, phi_range = 2*np.pi):
         self.gravity = 9.81 #: [m/s2] acceleration
         self.mass = 1 #: [kg] mass
         self.Ixx = 0.1
@@ -42,7 +43,7 @@ class PlanarQuadrotorEnv(gym.Env):
         high = np.array([
             10.0,
             10.0,
-            2*np.pi,
+            phi_range,
             np.finfo(np.float32).max,
             np.finfo(np.float32).max,
             np.finfo(np.float32).max,
@@ -51,7 +52,7 @@ class PlanarQuadrotorEnv(gym.Env):
         low = np.array([
             0.0,
             0.0,
-            -2*np.pi,
+            -phi_range,
             -np.finfo(np.float32).max,
             -np.finfo(np.float32).max,
             -np.finfo(np.float32).max,
@@ -110,7 +111,7 @@ class PlanarQuadrotorEnv(gym.Env):
     
     def step(self, action):
         err_msg = "%r (%s) invalid" % (action, type(action))
-        assert self.action_space.contains(action), err_msg
+        # assert self.action_space.contains(action), err_msg
             
         # action = np.clip(action, self.minF, self.maxF)
         Intg = self.integrator(x0=self.state, p=action)
