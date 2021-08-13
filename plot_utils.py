@@ -111,17 +111,17 @@ def plot_pose(tgrid, pose, save_fig=False):
 
 
 def plot_RL_statistics(save_fig=False):
-    latexify(fig_width=11, fig_height=4)
+    latexify(fig_width=11, fig_height=3)
 
     # load trainig statistics
     sac_reward = read_csv('report/SAC7_reward.csv')
-    td3_reward = read_csv('report/TD36_reward.csv')
+    td3_reward = read_csv('report/TD37_reward.csv')
 
     sac_actor_loss = read_csv('report/SAC7_actor_loss.csv')
-    td3_actor_loss = read_csv('report/TD36_actor_loss.csv')
+    td3_actor_loss = read_csv('report/TD37_actor_loss.csv')
 
     sac_critic_loss = read_csv('report/SAC7_critic_loss.csv')
-    td3_critic_loss = read_csv('report/TD36_critic_loss.csv')
+    td3_critic_loss = read_csv('report/TD37_critic_loss.csv')
 
 
     fig, ax = plt.subplots(1,3)
@@ -129,19 +129,21 @@ def plot_RL_statistics(save_fig=False):
     ax[0].plot(1e-5*td3_reward.values[:,1], 1e-3*td3_reward.values[:,2], label='TD3')
     ax[0].set_xlabel(r'time steps $\times\ 10^5$')
     ax[0].set_ylabel(r'episode return $\times\ 10^3$')
+    ax[0].set_ylim(-14, -4)
     ax[0].legend()
 
     ax[1].plot(1e-5*sac_actor_loss.values[:,1], 1e-3*sac_actor_loss.values[:,2], label='SAC')
     ax[1].plot(1e-5*td3_actor_loss.values[:,1], 1e-3*td3_actor_loss.values[:,2], label='TD3')
     ax[1].set_xlabel(r'time steps $\times\ 10^5$')
     ax[1].set_ylabel(r'actor loss $\times\ 10^3$')
+    ax[1].set_ylim(0, 8)
     ax[1].legend()
 
     ax[2].plot(1e-5*sac_critic_loss.values[:,1], 1e-4*sac_critic_loss.values[:,2], label='SAC')
     ax[2].plot(1e-5*td3_critic_loss.values[:,1], 1e-4*td3_critic_loss.values[:,2], label='TD3')
     ax[2].set_xlabel(r'time steps $\times\ 10^5$')
     ax[2].set_ylabel(r'critic loss $\times\ 10^4$')
-    ax[2].set_ylim(-2, 50)
+    ax[2].set_ylim(-1, 25)
     ax[2].legend()
 
     plt.show()
@@ -159,7 +161,7 @@ def plot_controls_RL(t_grid_td3, u_traj_td31, t_grid_sac, u_traj_sac1, save_fig=
     ax.step(t_grid_sac[0:-1], u_traj_sac1[:,1], '--', where='post', label=r'$F_2$ SAC')
     ax.set_xlabel(r'$k$ (iteration)')
     ax.set_ylabel(r'$F$ (N)')
-    ax.legend()
+    ax.legend(loc='upper right')
     ax.grid()
     plt.show()
     if save_fig:

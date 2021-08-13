@@ -56,7 +56,7 @@ def train_new_TD3_model(env, time_steps=1e+5):
     action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
     
     # define policy parameters: network architecture
-    policy_kwargs = dict(net_arch = dict(pi = [128, 128], qf = [400, 300]))
+    policy_kwargs = dict(net_arch = dict(pi = [128, 128, 128], qf = [512, 256, 128]))
     lr = 1e-3
     # policy_kwargs = dict(net_arch=dict(pi=[64, 64], qf=[400, 300]))
     
@@ -86,20 +86,20 @@ def continue_traininig_TD3_model(env, time_steps=1e+5):
     td3_model.save_replay_buffer("RL_models/td3_drone_replay_buffer")
 
 
-time_steps = 5e+5
+time_steps = 2e+5
 
 # define enivronment
 log_dir = "logs/"
 os.makedirs(log_dir, exist_ok=True)
 
-env = PlanarQuadrotorEnv()
+env = PlanarQuadrotorEnv(phi_range=np.pi)
 env = Monitor(env, log_dir)
 env = DummyVecEnv([lambda: env])
 env.reset()
 
 # train_new_SAC_model(env, time_steps=1e+4)
 # continue_traininig_SAC_model(env, time_steps)
-# train_new_TD3_model(env)
+# train_new_TD3_model(env, 1e+4)
 continue_traininig_TD3_model(env, time_steps)
 
 
